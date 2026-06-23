@@ -1,5 +1,12 @@
 TechFix SGC — Sistema de Gestão Comercial
 
+Alunos:
+Lucas Gomes,
+Mariana Borel,
+Susana Borges,
+Gabriel Guedes,
+Marcos Vinicius
+
 Tecnologias Utilizadas
 
 * Python
@@ -98,3 +105,4 @@ Regras de Negócio
 * Não é permitido vender sem estoque suficiente
 * O valor total da venda é calculado automaticamente
 
+Obs: Feito no sqlite pois o XAMPP sempre dá problema na faculdade kkkkkkk
