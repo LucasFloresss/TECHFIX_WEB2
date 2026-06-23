@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block titulo %}Cliente — TechFix{% endblock %}
+{% block titulo_pagina %}Cadastro de Cliente{% endblock %}
+
+{% block conteudo %}
+<div id="alerta"></div>
+
+<div class="form-card">
+  <div class="form-grupo">
+    <label>Nome completo *</label>
+    <input type="text" id="nome" placeholder="Nome do cliente">
+  </div>
+  <div class="form-linha">
+    <div class="form-grupo">
+      <label>CPF *</label>
+      <input type="text" id="cpf" placeholder="000.000.000-00" maxlength="14">
+    </div>
+    <div class="form-grupo">
+      <label>Telefone *</label>
+      <input type="text" id="telefone" placeholder="(00) 00000-0000">
+    </div>
+  </div>
+  <div class="form-grupo">
+    <label>Email *</label>
+    <input type="email" id="email" placeholder="email@exemplo.com">
+  </div>
+  <div class="form-grupo">
+    <label>Endereço</label>
+    <input type="text" id="endereco" placeholder="Rua, número, bairro, cidade">
+  </div>
+  <div class="form-acoes">
+    <button class="btn btn-primario" id="btn-salvar">Salvar Cliente</button>
+    <a href="/clientes/" class="btn btn-outline">Cancelar</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const pathParts = window.location.pathname.split('/').filter(Boolean);
+const clienteId = pathParts[1] && pathParts[1] !== 'novo' ? pathParts[1] : null;
+
+if (clienteId) {
+  document.querySelector('header h2').textContent = 'Editar Cliente';
+  API.get(`/api/clientes/${clienteId}/`).then(c => {
+    document.getElementById('nome').value = c.nome;
+    document.getElementById('cpf').value = c.cpf;
+    document.getElementById('email').value = c.email;
+    document.getElementById('telefone').value = c.telefone;
+    document.getElementById('endereco').value = c.endereco;
+  });
+}
+
+document.getElementById('btn-salvar').addEventListener('click', async () => {
+  limparAlerta();
+  const dados = {
+    nome: document.getElementById('nome').value.trim(),
+    cpf: document.getElementById('cpf').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    telefone: document.getElementById('telefone').value.trim(),
+    endereco: document.getElementById('endereco').value.trim(),
+  };
+
+  if (!dados.nome || !dados.cpf || !dados.email || !dados.telefone) {
+    mostrarErro('Preencha todos os campos obrigatórios.');
+    return;
+  }
+
+  try {
+    if (clienteId) {
+      await API.put(`/api/clientes/${clienteId}/`, dados);
+    } else {
+      await API.post('/api/clientes/', dados);
+    }
+    window.location.href = '/clientes/';
+  } catch (e) {
+    const msg = e.cpf ? 'CPF já cadastrado.' : (e.email ? 'Email inválido.' : 'Erro ao salvar cliente.');
+    mostrarErro(msg);
+  }
+});
+</script>
+{% endblock %}

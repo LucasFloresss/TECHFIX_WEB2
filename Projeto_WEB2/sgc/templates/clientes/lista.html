@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block titulo %}Clientes — TechFix{% endblock %}
+{% block titulo_pagina %}Clientes{% endblock %}
+{% block header_acao %}
+  <a href="/clientes/novo/" class="btn btn-laranja">+ Novo Cliente</a>
+{% endblock %}
+
+{% block conteudo %}
+<div id="alerta"></div>
+
+<div class="tabela-container">
+  <div class="tabela-header">
+    <h3>Todos os Clientes</h3>
+    <input type="text" id="busca" placeholder="Buscar por nome ou CPF..." style="padding:8px 12px;border:1px solid var(--cinza-borda);border-radius:7px;font-size:0.88rem;width:250px;">
+  </div>
+  <table>
+    <tbody id="tabela-clientes">
+      <tr><td colspan="6" class="loading">Carregando...</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let todosClientes = [];
+
+async function carregar() {
+  try {
+    todosClientes = await API.get('/api/clientes/');
+    renderizar(todosClientes);
+  } catch {
+    document.getElementById('tabela-clientes').innerHTML = '<tr><td colspan="6" class="alerta alerta-erro">Erro ao carregar.</td></tr>';
+  }
+}
+
+function renderizar(lista) {
+  const tbody = document.getElementById('tabela-clientes');
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="vazio">Nenhum cliente cadastrado.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map(c => `
+    <tr>
+      <td>${c.id}</td>
+      <td><strong>${c.nome}</strong></td>
+      <td>${c.cpf}</td>
+      <td>${c.email}</td>
+      <td>${c.telefone}</td>
+      <td style="display:flex;gap:8px;">
+        <a href="/clientes/${c.id}/editar/" class="btn btn-outline btn-sm">Editar</a>
+        <button class="btn btn-perigo btn-sm" onclick="excluir(${c.id}, '${c.nome}')">Excluir</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function excluir(id, nome) {
+  if (!confirm(`Excluir o cliente "${nome}"?`)) return;
+  try {
+    await API.delete(`/api/clientes/${id}/`);
+    mostrarSucesso('Cliente excluído.');
+    carregar();
+  } catch (e) {
+    mostrarErro(e.erro || 'Não foi possível excluir este cliente.');
+  }
+}
+
+document.getElementById('busca').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  renderizar(todosClientes.filter(c => c.nome.toLowerCase().includes(q) || c.cpf.includes(q)));
+});
+
+carregar();
+</script>
+{% endblock %}

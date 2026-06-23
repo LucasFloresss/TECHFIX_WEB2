@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block titulo %}TechFix SGC{% endblock %}</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+<aside id="sidebar">
+  <div class="logo">
+    <h1>⚙ TechFix</h1>
+    <span>Assistência Técnica / Produtos</span>
+  </div>
+  <nav>
+    <a href="/clientes/">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Clientes
+    </a>
+    <a href="/produtos/">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      Produtos
+    </a>
+    <a href="/vendas/">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      Vendas
+    </a>
+    <a href="/relatorios/">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Relatórios
+    </a>
+  </nav>
+  <div class="user-info">Logado como: <strong id="nome-usuario"></strong></div>
+  <a class="btn-sair" onclick="API.logout()">Sair</a>
+</aside>
+
+<div id="main">
+  <header>
+    <h2>{% block titulo_pagina %}{% endblock %}</h2>
+    <div>{% block header_acao %}{% endblock %}</div>
+  </header>
+  <div class="conteudo">
+    {% block conteudo %}{% endblock %}
+  </div>
+</div>
+
+{% load static %}
+<script src="{% static 'js/api.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

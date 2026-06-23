@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block titulo %}Produto — TechFix{% endblock %}
+{% block titulo_pagina %}Cadastro de Produto{% endblock %}
+
+{% block conteudo %}
+<div id="alerta"></div>
+
+<div class="form-card">
+  <div class="form-grupo">
+    <label>Nome do produto *</label>
+    <input type="text" id="nome" placeholder="Ex: Fonte ATX 500W">
+  </div>
+  <div class="form-grupo">
+    <label>Descrição</label>
+    <textarea id="descricao" rows="3" placeholder="Detalhes do produto..."></textarea>
+  </div>
+  <div class="form-linha">
+    <div class="form-grupo">
+      <label>Preço (R$) *</label>
+      <input type="number" id="preco" step="0.01" min="0" placeholder="0,00">
+    </div>
+    <div class="form-grupo">
+      <label>Quantidade em estoque *</label>
+      <input type="number" id="quantidade_estoque" min="0" placeholder="0">
+    </div>
+  </div>
+  <div class="form-grupo">
+    <label>Estoque mínimo</label>
+    <input type="number" id="estoque_minimo" min="0" placeholder="5" value="5">
+  </div>
+  <div class="form-acoes">
+    <button class="btn btn-primario" id="btn-salvar">Salvar Produto</button>
+    <a href="/produtos/" class="btn btn-outline">Cancelar</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const pathParts = window.location.pathname.split('/').filter(Boolean);
+const produtoId = pathParts[1] && pathParts[1] !== 'novo' ? pathParts[1] : null;
+
+if (produtoId) {
+  document.querySelector('header h2').textContent = 'Editar Produto';
+  API.get(`/api/produtos/${produtoId}/`).then(p => {
+    document.getElementById('nome').value = p.nome;
+    document.getElementById('descricao').value = p.descricao || '';
+    document.getElementById('preco').value = p.preco;
+    document.getElementById('quantidade_estoque').value = p.quantidade_estoque;
+    document.getElementById('estoque_minimo').value = p.estoque_minimo;
+  });
+}
+
+document.getElementById('btn-salvar').addEventListener('click', async () => {
+  limparAlerta();
+  const dados = {
+    nome: document.getElementById('nome').value.trim(),
+    descricao: document.getElementById('descricao').value.trim(),
+    preco: parseFloat(document.getElementById('preco').value),
+    quantidade_estoque: parseInt(document.getElementById('quantidade_estoque').value),
+    estoque_minimo: parseInt(document.getElementById('estoque_minimo').value) || 5,
+  };
+
+  if (!dados.nome || isNaN(dados.preco) || isNaN(dados.quantidade_estoque)) {
+    mostrarErro('Preencha todos os campos obrigatórios.');
+    return;
+  }
+
+  if (dados.preco < 0) {
+    mostrarErro('Preço não pode ser negativo.');
+    return;
+  }
+
+  try {
+    if (produtoId) {
+      await API.put(`/api/produtos/${produtoId}/`, dados);
+    } else {
+      await API.post('/api/produtos/', dados);
+    }
+    window.location.href = '/produtos/';
+  } catch (e) {
+    mostrarErro(e.preco ? e.preco[0] : 'Erro ao salvar produto.');
+  }
+});
+</script>
+{% endblock %}

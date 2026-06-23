@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block titulo %}Venda — TechFix{% endblock %}
+{% block titulo_pagina %}Detalhes da Venda{% endblock %}
+{% block header_acao %}
+  <a href="/vendas/" class="btn btn-outline">← Voltar</a>
+  <button onclick="excluirVenda()" class="btn btn-perigo">Excluir Venda</button>
+{% endblock %}
+
+{% block conteudo %}
+<div id="alerta"></div>
+<div id="conteudo-venda" class="loading">Carregando...</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const vendaId = {{ venda_id }};
+
+async function carregar() {
+  try {
+    const v = await API.get(`/api/vendas/${vendaId}/`);
+
+    document.getElementById('conteudo-venda').innerHTML = `
+      <div class="form-card" style="max-width:700px;margin-bottom:24px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+          <div><span style="font-size:0.8rem;color:var(--texto-suave);">Número</span><br><strong>#${v.id}</strong></div>
+          <div><span style="font-size:0.8rem;color:var(--texto-suave);">Data</span><br><strong>${formatarData(v.data)}</strong></div>
+          <div><span style="font-size:0.8rem;color:var(--texto-suave);">Cliente</span><br><strong>${v.cliente_nome}</strong></div>
+          <div><span style="font-size:0.8rem;color:var(--texto-suave);">Atendente</span><br><strong>${v.usuario_nome}</strong></div>
+        </div>
+
+        <table>
+          <tbody>
+            ${v.itens.map(i => `
+              <tr>
+                <td>${i.produto_nome}</td>
+                <td>${i.quantidade}</td>
+                <td>${formatarMoeda(i.preco_unitario)}</td>
+                <td><strong>${formatarMoeda(i.subtotal)}</strong></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div style="text-align:right;margin-top:16px;font-size:1.2rem;font-weight:700;color:var(--azul);border-top:2px solid var(--cinza-borda);padding-top:16px;">
+          Total: ${formatarMoeda(v.valor_total)}
+        </div>
+      </div>
+    `;
+  } catch {
+    mostrarErro('Erro ao carregar venda.');
+    document.getElementById('conteudo-venda').innerHTML = '';
+  }
+}
+
+carregar();
+
+async function excluirVenda() {
+  if (!confirm('Excluir esta venda? Esta ação não pode ser desfeita.')) return;
+  try {
+    await API.delete(`/api/vendas/${vendaId}/`);
+    mostrarSucesso('Venda excluída com sucesso.');
+    setTimeout(() => window.location.href = '/vendas/', 1500);
+  } catch (err) {
+    mostrarErro(err.detail || 'Erro ao excluir venda.');
+  }
+}
+</script>
+{% endblock %}

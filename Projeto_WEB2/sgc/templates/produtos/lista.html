@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block titulo %}Produtos — TechFix{% endblock %}
+{% block titulo_pagina %}Produtos{% endblock %}
+{% block header_acao %}
+  <a href="/produtos/novo/" class="btn btn-laranja">+ Novo Produto</a>
+{% endblock %}
+
+{% block conteudo %}
+<div id="alerta"></div>
+
+<div class="tabela-container">
+  <div class="tabela-header">
+    <h3>Estoque de Produtos</h3>
+  </div>
+  <table>
+    <tbody id="tabela-produtos">
+      <tr><td colspan="6" class="loading">Carregando...</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function carregar() {
+  try {
+    const produtos = await API.get('/api/produtos/');
+    const tbody = document.getElementById('tabela-produtos');
+    if (!produtos.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="vazio">Nenhum produto cadastrado.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = produtos.map(p => {
+      const badge = p.estoque_baixo
+        ? '<span class="badge badge-vermelho">Estoque baixo</span>'
+        : '<span class="badge badge-verde">Normal</span>';
+      return `
+        <tr>
+          <td>${p.id}</td>
+          <td><strong>${p.nome}</strong><br><small style="color:var(--texto-suave)">${p.descricao || ''}</small></td>
+          <td>${formatarMoeda(p.preco)}</td>
+          <td>${p.quantidade_estoque} un.</td>
+          <td>${badge}</td>
+          <td style="display:flex;gap:8px;">
+            <a href="/produtos/${p.id}/editar/" class="btn btn-outline btn-sm">Editar</a>
+            <button class="btn btn-perigo btn-sm" onclick="excluir(${p.id}, '${p.nome}')">Excluir</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch {
+    document.getElementById('tabela-produtos').innerHTML = '<tr><td colspan="6" class="alerta alerta-erro">Erro ao carregar.</td></tr>';
+  }
+}
+
+async function excluir(id, nome) {
+  if (!confirm(`Excluir o produto "${nome}"?`)) return;
+  try {
+    await API.delete(`/api/produtos/${id}/`);
+    mostrarSucesso('Produto excluído.');
+    carregar();
+  } catch {
+    mostrarErro('Não foi possível excluir este produto.');
+  }
+}
+
+carregar();
+</script>
+{% endblock %}

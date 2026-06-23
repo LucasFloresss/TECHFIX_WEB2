@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block titulo %}Relatórios — TechFix{% endblock %}
+{% block titulo_pagina %}Relatórios{% endblock %}
+
+{% block conteudo %}
+<div id="alerta"></div>
+
+<!-- Gráfico Anual -->
+<div class="grafico-container">
+  <h3>Faturamento Mensal</h3>
+  <div style="display:flex;gap:12px;margin-bottom:20px;align-items:center;">
+    <select id="ano-sel" style="padding:8px 12px;border:1px solid var(--cinza-borda);border-radius:7px;font-size:0.9rem;"></select>
+    <button class="btn btn-primario btn-sm" onclick="carregarAnual()">Atualizar</button>
+  </div>
+  <canvas id="grafico-anual" height="80"></canvas>
+</div>
+
+<!-- Relatório por Período -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+  <div class="form-card">
+    <h3 style="margin-bottom:16px;font-size:1rem;">Vendas por Período</h3>
+    <div class="form-grupo">
+      <label>Data início</label>
+      <input type="date" id="data-inicio">
+    </div>
+    <div class="form-grupo">
+      <label>Data fim</label>
+      <input type="date" id="data-fim">
+    </div>
+    <button class="btn btn-primario" onclick="carregarPeriodo()">Gerar Relatório</button>
+    <div id="resultado-periodo" style="margin-top:16px;"></div>
+  </div>
+
+  <!-- Relatório por Cliente -->
+  <div class="form-card">
+    <h3 style="margin-bottom:16px;font-size:1rem;">Vendas por Cliente</h3>
+    <div class="form-grupo">
+      <label>Cliente</label>
+      <select id="cliente-sel">
+        <option value="">Selecione...</option>
+      </select>
+    </div>
+    <button class="btn btn-primario" onclick="carregarCliente()">Ver Histórico</button>
+    <div id="resultado-cliente" style="margin-top:16px;"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+let grafico = null;
+const mesesNomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+// Popular anos
+const anoAtual = new Date().getFullYear();
+const selAno = document.getElementById('ano-sel');
+for (let a = anoAtual; a >= anoAtual - 4; a--) {
+  const opt = document.createElement('option');
+  opt.value = a;
+  opt.textContent = a;
+  selAno.appendChild(opt);
+}
+
+// Popular clientes
+API.get('/api/clientes/').then(clientes => {
+  const sel = document.getElementById('cliente-sel');
+  clientes.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.nome;
+    sel.appendChild(opt);
+  });
+});
+
+async function carregarAnual() {
+  const ano = document.getElementById('ano-sel').value;
+  try {
+    const data = await API.get(`/api/relatorios/anual/?ano=${ano}`);
+    const labels = data.meses.map(m => mesesNomes[m.mes - 1]);
+    const totais = data.meses.map(m => m.total);
+
+    const ctx = document.getElementById('grafico-anual').getContext('2d');
+    if (grafico) grafico.destroy();
+    grafico = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Faturamento (R$)',
+          data: totais,
+          backgroundColor: '#2563eb',
+          borderRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') }
+          }
+        }
+      }
+    });
+  } catch {
+    mostrarErro('Erro ao carregar gráfico.');
+  }
+}
+
+async function carregarPeriodo() {
+  const inicio = document.getElementById('data-inicio').value;
+  const fim = document.getElementById('data-fim').value;
+  const div = document.getElementById('resultado-periodo');
+  div.innerHTML = '<p class="loading">Carregando...</p>';
+
+  try {
+    let url = '/api/relatorios/periodo/?';
+    if (inicio) url += `inicio=${inicio}&`;
+    if (fim) url += `fim=${fim}`;
+    const data = await API.get(url);
+
+    div.innerHTML = `
+      <div style="background:var(--cinza-fundo);border-radius:8px;padding:16px;margin-bottom:12px;">
+        <div style="font-size:0.8rem;color:var(--texto-suave);">Total de vendas</div>
+        <div style="font-size:1.4rem;font-weight:700;color:var(--azul);">${formatarMoeda(data.total)}</div>
+        <div style="font-size:0.85rem;color:var(--texto-suave);margin-top:4px;">${data.quantidade} venda(s) no período</div>
+      </div>
+      <div style="max-height:200px;overflow-y:auto;">
+        ${data.vendas.map(v => `
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--cinza-borda);font-size:0.85rem;">
+            <span><strong>#${v.id}</strong> ${v.cliente}</span>
+            <span>${formatarMoeda(v.valor_total)}</span>
+          </div>
+        `).join('') || '<p style="color:var(--texto-suave)">Nenhuma venda no período.</p>'}
+      </div>
+    `;
+  } catch {
+    div.innerHTML = '<p class="alerta alerta-erro">Erro ao carregar relatório.</p>';
+  }
+}
+
+async function carregarCliente() {
+  const clienteId = document.getElementById('cliente-sel').value;
+  if (!clienteId) { mostrarErro('Selecione um cliente.'); return; }
+
+  const div = document.getElementById('resultado-cliente');
+  div.innerHTML = '<p class="loading">Carregando...</p>';
+
+  try {
+    const data = await API.get(`/api/relatorios/cliente/?cliente_id=${clienteId}`);
+
+    div.innerHTML = `
+      <div style="background:var(--cinza-fundo);border-radius:8px;padding:16px;margin-bottom:12px;">
+        <div style="font-size:0.8rem;color:var(--texto-suave);">Total gasto</div>
+        <div style="font-size:1.4rem;font-weight:700;color:var(--azul);">${formatarMoeda(data.total)}</div>
+        <div style="font-size:0.85rem;color:var(--texto-suave);margin-top:4px;">${data.quantidade} compra(s)</div>
+      </div>
+      <div style="max-height:200px;overflow-y:auto;">
+        ${data.vendas.map(v => `
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--cinza-borda);font-size:0.85rem;">
+            <a href="/vendas/${v.id}/" style="color:var(--azul-claro)">#${v.id} — ${v.data}</a>
+            <span>${formatarMoeda(v.valor_total)}</span>
+          </div>
+        `).join('') || '<p style="color:var(--texto-suave)">Nenhuma compra registrada.</p>'}
+      </div>
+    `;
+  } catch {
+    div.innerHTML = '<p class="alerta alerta-erro">Erro ao carregar relatório.</p>';
+  }
+}
+
+carregarAnual();
+</script>
+{% endblock %}

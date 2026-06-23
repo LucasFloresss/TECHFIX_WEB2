@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% block titulo %}Nova Venda — TechFix{% endblock %}
+{% block titulo_pagina %}Registrar Venda{% endblock %}
+
+{% block conteudo %}
+<div id="alerta"></div>
+
+<div class="form-card" style="max-width:800px;">
+  <div class="form-grupo">
+    <label>Cliente *</label>
+    <select id="cliente">
+      <option value="">Selecione o cliente...</option>
+    </select>
+  </div>
+
+  <div style="margin-bottom:20px;">
+    <label style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:10px;">Itens da Venda *</label>
+
+    <div style="display:grid;grid-template-columns:1fr auto auto;gap:12px;margin-bottom:12px;">
+      <select id="produto-sel">
+        <option value="">Selecione um produto...</option>
+      </select>
+      <input type="number" id="qtd-sel" min="1" value="1" style="width:80px;padding:10px;border:1px solid var(--cinza-borda);border-radius:7px;">
+      <button class="btn btn-primario" onclick="adicionarItem()">+ Adicionar</button>
+    </div>
+
+    <div id="lista-itens"></div>
+
+    <div style="text-align:right;font-size:1.1rem;font-weight:700;color:var(--azul);margin-top:12px;">
+      Total: <span id="total-venda">R$ 0,00</span>
+    </div>
+  </div>
+
+  <div class="form-acoes">
+    <button class="btn btn-laranja" id="btn-finalizar">Finalizar Venda</button>
+    <a href="/vendas/" class="btn btn-outline">Cancelar</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let produtos = [];
+let itens = [];
+
+async function init() {
+  try {
+    const [clientes, prods] = await Promise.all([
+      API.get('/api/clientes/'),
+      API.get('/api/produtos/'),
+    ]);
+
+    produtos = prods;
+
+    const selCliente = document.getElementById('cliente');
+    clientes.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = `${c.nome} — ${c.cpf}`;
+      selCliente.appendChild(opt);
+    });
+
+    const selProd = document.getElementById('produto-sel');
+    prods.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = `${p.nome} — ${formatarMoeda(p.preco)} (estoque: ${p.quantidade_estoque})`;
+      opt.disabled = p.quantidade_estoque === 0;
+      selProd.appendChild(opt);
+    });
+  } catch {
+    mostrarErro('Erro ao carregar dados.');
+  }
+}
+
+function adicionarItem() {
+  const prodId = parseInt(document.getElementById('produto-sel').value);
+  const qtd = parseInt(document.getElementById('qtd-sel').value);
+
+  if (!prodId) { mostrarErro('Selecione um produto.'); return; }
+  if (!qtd || qtd < 1) { mostrarErro('Quantidade inválida.'); return; }
+
+  const produto = produtos.find(p => p.id === prodId);
+  if (!produto) return;
+
+  if (qtd > produto.quantidade_estoque) {
+    mostrarErro(`Estoque insuficiente. Disponível: ${produto.quantidade_estoque}`);
+    return;
+  }
+
+  const existente = itens.find(i => i.produto === prodId);
+  if (existente) {
+    existente.quantidade += qtd;
+  } else {
+    itens.push({ produto: prodId, nome: produto.nome, preco: parseFloat(produto.preco), quantidade: qtd });
+  }
+
+  limparAlerta();
+  renderItens();
+}
+
+function removerItem(prodId) {
+  itens = itens.filter(i => i.produto !== prodId);
+  renderItens();
+}
+
+function renderItens() {
+  const container = document.getElementById('lista-itens');
+  if (!itens.length) {
+    container.innerHTML = '<p style="color:var(--texto-suave);font-size:0.88rem;">Nenhum item adicionado.</p>';
+    document.getElementById('total-venda').textContent = 'R$ 0,00';
+    return;
+  }
+
+  let total = 0;
+  container.innerHTML = itens.map(i => {
+    const sub = i.preco * i.quantidade;
+    total += sub;
+    return `
+      <div class="item-linha">
+        <div>
+          <div class="nome-produto">${i.nome}</div>
+          <div class="preco">${formatarMoeda(i.preco)} × ${i.quantidade}</div>
+        </div>
+        <div style="font-weight:600;">${formatarMoeda(sub)}</div>
+        <button class="btn btn-perigo btn-sm" onclick="removerItem(${i.produto})">✕</button>
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('total-venda').textContent = formatarMoeda(total);
+}
+
+document.getElementById('btn-finalizar').addEventListener('click', async () => {
+  limparAlerta();
+  const clienteId = document.getElementById('cliente').value;
+
+  if (!clienteId) { mostrarErro('Selecione um cliente.'); return; }
+  if (!itens.length) { mostrarErro('Adicione ao menos um item.'); return; }
+
+  try {
+    const venda = await API.post('/api/vendas/', {
+      cliente: parseInt(clienteId),
+      itens: itens.map(i => ({ produto: i.produto, quantidade: i.quantidade })),
+    });
+    window.location.href = `/vendas/${venda.id}/`;
+  } catch (e) {
+    mostrarErro(e.erro || 'Erro ao registrar venda.');
+  }
+});
+
+init();
+renderItens();
+</script>
+{% endblock %}

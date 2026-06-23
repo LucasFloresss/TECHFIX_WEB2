@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — TechFix</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="login-page">
+
+<div class="login-box">
+  <div class="titulo">
+    <h1>⚙ TechFix</h1>
+    <p>Sistema de Gestão Comercial</p>
+  </div>
+
+  <div id="alerta"></div>
+
+  <div class="form-grupo">
+    <label>Usuário</label>
+    <input type="text" id="username" placeholder="Digite seu usuário" autofocus>
+  </div>
+
+  <div class="form-grupo">
+    <label>Senha</label>
+    <input type="password" id="senha" placeholder="Digite sua senha">
+  </div>
+
+  <button class="btn btn-laranja" style="width:100%; margin-top:8px; justify-content:center; padding:12px;" id="btn-entrar">
+    Entrar
+  </button>
+</div>
+
+<script src="{% static 'js/api.js' %}"></script>
+<script>
+  // Se já está logado, redirecionar
+  if (API.getToken()) window.location.href = '/vendas/';
+
+  async function login() {
+    const username = document.getElementById('username').value.trim();
+    const senha = document.getElementById('senha').value;
+
+    if (!username || !senha) {
+      mostrarErro('Preencha usuário e senha.');
+      return;
+    }
+
+    try {
+      const resp = await fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password: senha }),
+      });
+
+      if (!resp.ok) {
+        mostrarErro('Usuário ou senha inválidos.');
+        return;
+      }
+
+      const data = await resp.json();
+      API.setToken(data.access);
+      API.setUser({ username });
+      window.location.href = '/vendas/';
+    } catch {
+      mostrarErro('Erro ao conectar com o servidor.');
+    }
+  }
+
+  document.getElementById('btn-entrar').addEventListener('click', login);
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+</script>
+</body>
+</html>

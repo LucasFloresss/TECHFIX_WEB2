@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block titulo %}Vendas — TechFix{% endblock %}
+{% block titulo_pagina %}Vendas{% endblock %}
+{% block header_acao %}
+  <a href="/vendas/nova/" class="btn btn-laranja">+ Nova Venda</a>
+{% endblock %}
+
+{% block conteudo %}
+<div class="cards" id="cards-resumo">
+  <div class="card"><div class="icone">🧾</div><div class="label">Vendas Hoje</div><div class="valor" id="vendas-hoje">—</div></div>
+  <div class="card"><div class="icone">💰</div><div class="label">Faturamento Hoje</div><div class="valor" id="fat-hoje">—</div></div>
+  <div class="card"><div class="icone">👥</div><div class="label">Clientes</div><div class="valor" id="total-clientes">—</div></div>
+  <div class="card"><div class="icone">📦</div><div class="label">Produtos</div><div class="valor" id="total-produtos">—</div></div>
+</div>
+
+<div class="tabela-container">
+  <div class="tabela-header">
+    <h3>Últimas Vendas</h3>
+  </div>
+  <table>
+    <tbody id="tabela-vendas">
+      <tr><td colspan="6" class="loading">Carregando...</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function carregar() {
+  try {
+    const [vendas, clientes, produtos] = await Promise.all([
+      API.get('/api/vendas/'),
+      API.get('/api/clientes/'),
+      API.get('/api/produtos/'),
+    ]);
+
+    const hoje = new Date();
+    const vendasHoje = vendas.filter(v => {
+      if (!v.data) return false;
+      const dataVenda = new Date(v.data);
+      return dataVenda.getFullYear() === hoje.getFullYear()
+        && dataVenda.getMonth() === hoje.getMonth()
+        && dataVenda.getDate() === hoje.getDate();
+    });
+    const fatHoje = vendasHoje.reduce((s, v) => s + Number(v.valor_total || 0), 0);
+
+    document.getElementById('vendas-hoje').textContent = vendasHoje.length;
+    document.getElementById('fat-hoje').textContent = formatarMoeda(fatHoje);
+    document.getElementById('total-clientes').textContent = clientes.length;
+    document.getElementById('total-produtos').textContent = produtos.length;
+
+    const tbody = document.getElementById('tabela-vendas');
+    if (!vendas.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="vazio">Nenhuma venda registrada ainda.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = vendas.slice(0, 20).map(v => `
+      <tr>
+        <td><strong>#${v.id}</strong></td>
+        <td>${formatarData(v.data)}</td>
+        <td>${v.cliente_nome || '—'}</td>
+        <td>${v.usuario_nome || '—'}</td>
+        <td><strong>${formatarMoeda(v.valor_total)}</strong></td>
+        <td style="display:flex;gap:8px;">
+          <a href="/vendas/${v.id}/" class="btn btn-outline btn-sm">Ver</a>
+          <button class="btn btn-perigo btn-sm" onclick="excluirVenda(${v.id})">Excluir</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    document.getElementById('tabela-vendas').innerHTML = '<tr><td colspan="6" class="alerta alerta-erro">Erro ao carregar dados.</td></tr>';
+  }
+}
+
+carregar();
+
+async function excluirVenda(id) {
+  if (!confirm('Excluir esta venda? Esta ação não pode ser desfeita.')) return;
+  try {
+    await API.delete(`/api/vendas/${id}/`);
+    mostrarSucesso('Venda excluída com sucesso.');
+    carregar();
+  } catch (err) {
+    mostrarErro(err.detail || 'Erro ao excluir venda.');
+  }
+}
+</script>
+{% endblock %}
