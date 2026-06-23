@@ -1,0 +1,30 @@
+Como Executar:
+
+Instale as dependências:
+
+pip install -r requirements.txt
+ou
+py -m pip install -r requirements.txt (caso o pip não esteja sendo reconhecido)
+
+Crie o banco de dados:
+
+python manage.py makemigrations clientes produtos vendas
+python manage.py migrate
+
+Crie os usuários:
+
+python criar_usuarios.py
+
+
+Inicie o servidor:
+
+python manage.py runserver
+
+Acesse no navegador:
+
+http://localhost:8000/login/
+
+
+Erros comuns:
+Erro: python não é reconhecido: Verifique se o Python está instalado e configurado no PATH
+Erro: não encontra o caminho: copie o path da pasta SGC e use o comando "cd (path copiado)"
