@@ -5,7 +5,7 @@ from produtos.models import Produto
 
 class Venda(models.Model):
     data = models.DateTimeField(auto_now_add=True)
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT)
     usuario = models.ForeignKey(User, on_delete=models.PROTECT)
     valor_total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
