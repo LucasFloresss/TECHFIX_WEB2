@@ -1,5 +1,12 @@
 TechFix SGC — Sistema de Gestão Comercial
 
+Alunos:
+Lucas Gomes
+Mariana Borel
+Susana Borges
+Gabriel Guedes
+Marcos Vinicius
+
 Tecnologias Utilizadas
 
 * Python
