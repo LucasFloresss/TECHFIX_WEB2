@@ -97,3 +97,5 @@ Regras de Negócio
 * Estoque é atualizado automaticamente
 * Não é permitido vender sem estoque suficiente
 * O valor total da venda é calculado automaticamente
+
+Obs: Feito no sqlite pois o XAMPP sempre dá problema na faculdade kkkkkkk
