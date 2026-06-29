@@ -1,3 +1,5 @@
+// Este JavaScript é o "cérebro" do frontend, gerenciando autenticação, comunicação com a API e funções auxiliares
+
 const API = {
   getToken() {
     return localStorage.getItem('token');
@@ -12,7 +14,7 @@ const API = {
   },
 
   setUser(user) {
-    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('user', JSON.stringify(user)); // Armazena token e dados do usuário
   },
 
   logout() {
@@ -54,14 +56,14 @@ const API = {
   delete(url) { return this.request('DELETE', url); },
 };
 
-function mostrarErro(msg, containerId = 'alerta') {
+function mostrarErro(msg, containerId = 'alerta') { // Feedback ruim
   const el = document.getElementById(containerId);
   if (el) {
     el.innerHTML = `<div class="alerta alerta-erro">${msg}</div>`;
   }
 }
 
-function mostrarSucesso(msg, containerId = 'alerta') {
+function mostrarSucesso(msg, containerId = 'alerta') { // Feedback bao
   const el = document.getElementById(containerId);
   if (el) {
     el.innerHTML = `<div class="alerta alerta-sucesso">${msg}</div>`;
