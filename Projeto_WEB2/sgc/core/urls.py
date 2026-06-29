@@ -9,10 +9,10 @@ def login_view(request):
 
 urlpatterns = [
     path('', RedirectView.as_view(url='/clientes/', permanent=False)),
-    path('admin/', admin.site.urls),
-    path('login/', login_view, name='login'),
+    path('admin/', admin.site.urls), # Painel administrativo do Django para gerenciar dados (clientes, vendas, usuarios e etc.)
+    path('login/', login_view, name='login'), # Página de login
 
-    # API Auth
+    # API de autenticação
     path('auth/login', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('auth/refresh', TokenRefreshView.as_view(), name='token_refresh'),
 
@@ -22,7 +22,7 @@ urlpatterns = [
     path('api/', include('vendas.api_urls')),
     path('api/', include('relatorios.api_urls')),
 
-    # Interface Web
+    # Interface na web bombastica
     path('', include('clientes.urls')),
     path('', include('produtos.urls')),
     path('', include('vendas.urls')),
