@@ -27,4 +27,4 @@ http://localhost:8000/login/
 
 Erros comuns:
 Erro: python não é reconhecido: Verifique se o Python está instalado e configurado no PATH
-Erro: não encontra o caminho: copie o path da pasta SGC e use o comando "cd (path copiado)"
+Erro: não encontra o caminho: copie o path da pasta SGC e use o comando "cd (path copiado) antes de executar os comandos"
