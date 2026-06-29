@@ -5,7 +5,9 @@ from django.db.models.functions import TruncMonth
 from vendas.models import Venda
 import datetime
 
-class RelatorioPeriodo(APIView):
+# isso tudo efine 3 endpoints de API para consultar dados de vendas com diferentes filtros
+
+class RelatorioPeriodo(APIView): # vendas em um período específico
     def get(self, request):
         data_inicio = request.query_params.get('inicio')
         data_fim = request.query_params.get('fim')
@@ -34,7 +36,7 @@ class RelatorioPeriodo(APIView):
             ]
         })
 
-class RelatorioCliente(APIView):
+class RelatorioCliente(APIView): # Vendas de um cliente específico
     def get(self, request):
         cliente_id = request.query_params.get('cliente_id')
         if not cliente_id:
@@ -56,7 +58,7 @@ class RelatorioCliente(APIView):
             ]
         })
 
-class RelatorioAnual(APIView):
+class RelatorioAnual(APIView): # Vendas por mês do ano
     def get(self, request):
         ano = request.query_params.get('ano', datetime.date.today().year)
 
