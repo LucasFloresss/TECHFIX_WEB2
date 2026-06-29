@@ -1,6 +1,6 @@
 from django.urls import path
 from .api_views import RelatorioPeriodo, RelatorioCliente, RelatorioAnual
-
+ # Define 3 rotas para acessar os relatórios via API REST
 urlpatterns = [
     path('relatorios/periodo/', RelatorioPeriodo.as_view(), name='relatorio_periodo'),
     path('relatorios/cliente/', RelatorioCliente.as_view(), name='relatorio_cliente'),
