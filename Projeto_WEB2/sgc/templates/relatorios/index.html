@@ -8,10 +8,7 @@
 <!-- Gráfico Anual -->
 <div class="grafico-container">
   <h3>Faturamento Mensal</h3>
-  <div style="display:flex;gap:12px;margin-bottom:20px;align-items:center;">
-    <select id="ano-sel" style="padding:8px 12px;border:1px solid var(--cinza-borda);border-radius:7px;font-size:0.9rem;"></select>
-    <button class="btn btn-primario btn-sm" onclick="carregarAnual()">Atualizar</button>
-  </div>
+  <p style="margin:0 0 12px;color:var(--texto-suave);">Ano: 2026</p>
   <canvas id="grafico-anual" height="80"></canvas>
 </div>
 
@@ -52,16 +49,6 @@
 let grafico = null;
 const mesesNomes = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
-// Popular anos
-const anoAtual = new Date().getFullYear();
-const selAno = document.getElementById('ano-sel');
-for (let a = anoAtual; a >= anoAtual - 4; a--) {
-  const opt = document.createElement('option');
-  opt.value = a;
-  opt.textContent = a;
-  selAno.appendChild(opt);
-}
-
 // Popular clientes
 API.get('/api/clientes/').then(clientes => {
   const sel = document.getElementById('cliente-sel');
@@ -74,7 +61,7 @@ API.get('/api/clientes/').then(clientes => {
 });
 
 async function carregarAnual() {
-  const ano = document.getElementById('ano-sel').value;
+  const ano = 2026;
   try {
     const data = await API.get(`/api/relatorios/anual/?ano=${ano}`);
     const labels = data.meses.map(m => mesesNomes[m.mes - 1]);

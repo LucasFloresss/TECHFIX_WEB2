@@ -77,6 +77,46 @@ function formatarMoeda(valor) {
   return parseFloat(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+function formatarCpf(cpf) {
+  if (!cpf) return '';
+
+  const digitos = String(cpf).replace(/\D/g, '').slice(0, 11);
+  if (!digitos) return '';
+
+  const partes = digitos.match(/.{1,3}/g) || [];
+  if (partes.length <= 2) {
+    return partes.join('.');
+  }
+
+  const bloco1 = partes[0] || '';
+  const bloco2 = partes[1] || '';
+  const bloco3 = partes[2] || '';
+  const digito = partes[3] || '';
+
+  if (digito) {
+    return `${bloco1}.${bloco2}.${bloco3}-${digito}`;
+  }
+
+  return `${bloco1}.${bloco2}.${bloco3}`;
+}
+
+function mascararCpf(input) {
+  const valor = String(input.value || '').replace(/\D/g, '').slice(0, 11);
+  let formatado = '';
+
+  if (valor.length > 9) {
+    formatado = `${valor.slice(0, 3)}.${valor.slice(3, 6)}.${valor.slice(6, 9)}-${valor.slice(9)}`;
+  } else if (valor.length > 6) {
+    formatado = `${valor.slice(0, 3)}.${valor.slice(3, 6)}.${valor.slice(6)}`;
+  } else if (valor.length > 3) {
+    formatado = `${valor.slice(0, 3)}.${valor.slice(3)}`;
+  } else {
+    formatado = valor;
+  }
+
+  input.value = formatado;
+}
+
 function formatarData(iso) {
   if (!iso) return '-';
   const d = new Date(iso);

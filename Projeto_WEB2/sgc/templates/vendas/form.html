@@ -56,7 +56,7 @@ async function init() {
     clientes.forEach(c => {
       const opt = document.createElement('option');
       opt.value = c.id;
-      opt.textContent = `${c.nome} — ${c.cpf}`;
+      opt.textContent = `${c.nome} — ${formatarCpf(c.cpf)}`;
       selCliente.appendChild(opt);
     });
 
@@ -117,12 +117,12 @@ function renderItens() {
     const sub = i.preco * i.quantidade;
     total += sub;
     return `
-      <div class="item-linha">
+      <div class="item-linha" style="color:#fff;">
         <div>
-          <div class="nome-produto">${i.nome}</div>
-          <div class="preco">${formatarMoeda(i.preco)} × ${i.quantidade}</div>
+          <div class="nome-produto" style="color:#fff;">${i.nome}</div>
+          <div class="preco" style="color:#fff;">${formatarMoeda(i.preco)} × ${i.quantidade}</div>
         </div>
-        <div style="font-weight:600;">${formatarMoeda(sub)}</div>
+        <div style="font-weight:600;color:#fff;">${formatarMoeda(sub)}</div>
         <button class="btn btn-perigo btn-sm" onclick="removerItem(${i.produto})">✕</button>
       </div>
     `;
