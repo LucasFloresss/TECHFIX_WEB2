@@ -2,6 +2,7 @@
 import os
 import sys
 
+# Define o script que executa comandos do Django a partir do terminal.
 def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
     try:
